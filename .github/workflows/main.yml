@@ -1,0 +1,68 @@
+name: Compilation Flutter (Android & Windows)
+
+# Déclencheur : s'active à chaque fois que vous cliquez sur "Commit & Push" sur la branche principale
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  # --- 1. JOB DE COMPILATION ANDROID (aarch64) ---
+  build-android:
+    name: Compilation Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le code source
+        uses: actions/checkout@v4
+
+      - name: Installer Java (Requis pour Android Gradle)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Installer l'environnement Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Récupérer les packages/dépendances
+        run: flutter pub get
+
+      - name: Compiler l'APK pour l'architecture aarch64
+        run: flutter build apk --target-platform android-arm64 --release
+
+      - name: Téléverser l'APK (Rendre téléchargeable)
+        uses: actions/upload-artifact@v4
+        with:
+          name: application-android-aarch64
+          path: build/app/outputs/flutter-apk/app-release.apk
+
+  # --- 2. JOB DE COMPILATION WINDOWS (x64) ---
+  build-windows:
+    name: Compilation Windows x64
+    runs-on: windows-latest
+    steps:
+      - name: Récupérer le code source
+        uses: actions/checkout@v4
+
+      - name: Installer l'environnement Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: Récupérer les packages/dépendances
+        run: flutter pub get
+
+      - name: Compiler l'application pour Windows x64
+        run: flutter build windows --release
+
+      - name: Compresser les fichiers de l'application en ZIP
+        run: Compress-Archive -Path build\windows\x64\runner\Release\* -DestinationPath build\windows-app-x64.zip
+
+      - name: Téléverser le ZIP Windows (Rendre téléchargeable)
+        uses: actions/upload-artifact@v4
+        with:
+          name: application-windows-x64
+          path: build/windows-app-x64.zip
