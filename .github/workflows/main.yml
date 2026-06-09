@@ -1,6 +1,5 @@
 name: Compilation Flutter (Android & Windows)
 
-# Déclencheur : s'active à chaque fois que vous cliquez sur "Commit & Push" sur la branche principale
 on:
   push:
     branches: [ "main", "master" ]
@@ -27,7 +26,12 @@ jobs:
         with:
           channel: 'stable'
 
-      - name: Récupérer les packages/dépendances
+      # --- ASTUCE ICI : On force Flutter à créer les dossiers Android/Windows manquants ---
+      - name: Réparer et générer la structure de projet manquante
+        run: |
+          flutter create . --platforms=android,windows
+
+       matrimonial-name: Récupérer les packages/dépendances
         run: flutter pub get
 
       - name: Compiler l'APK pour l'architecture aarch64
@@ -51,6 +55,11 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
+
+      # --- ASTUCE ICI : Même chose pour Windows ---
+      - name: Réparer et générer la structure de projet manquante
+        run: |
+          flutter create . --platforms=android,windows
 
       - name: Récupérer les packages/dépendances
         run: flutter pub get
